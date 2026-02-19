@@ -23,8 +23,10 @@ private:
     std::string fileName;
     std::ofstream outFile;
     int letra{};
+    char cLetra = (char)letra;
     int y_actual{};
     int x_actual{};
+    bool salir{false};
 public:
     Editor(std::string nombreFile)
     :fileName{nombreFile}
@@ -78,6 +80,18 @@ public:
     void handleInsertMode()
     {
         getyx(stdscr, y_actual, x_actual);
+        if (buffer.size()<y_actual)
+        {
+            buffer.resize(y_actual+1);
+        }
+
+        if (buffer[y_actual].size()<x_actual)
+        {
+            for (int i{};i<x_actual;i++)
+            {
+                buffer[y_actual].push_back(' ');
+            }
+        }
         buffer[y_actual].insert(x_actual,1,letra);
         x_actual+=1;
         move(y_actual,x_actual);
@@ -111,12 +125,12 @@ public:
         if( bufferCommandLine == ":q")
         {
             file.close();
-            endwin();             
-            return;
+            endwin();
+            salir = true;
         }
-        if( bufferCommandLine == ":wq")
+        else if( bufferCommandLine == ":wq")
         {
-            std::fstream outFile (fileName, std::ios::trunc);
+            std::ofstream outFile (fileName, std::ios::trunc);
             for (auto &lineas : buffer)
             {
                 outFile<<lineas<<'\n';
@@ -124,46 +138,61 @@ public:
             outFile.close();
             file.close();
             endwin();
+            salir = true;
+        }
+        else
+        {
+            clrtoeol();
+            move(y_actual,x_actual);
+            mode = Mode::NormalMode;
+            refresh();
             return;
         }
-
     }
 
     void handleCommandMode()
     {
+        char cLetra = (char)letra;
         getyx(stdscr, y_actual, x_actual);
         bufferCommandLine.clear();
-        bufferCommandLine.push_back(letra);
-        int command_x{0};
-        int command_y{28};
+        bufferCommandLine.push_back(cLetra);
 
-        move(command_y,command_x);
-        command_x+=1;
+        int command_x{0};
+        int command_y{20};
+
+        //esto lo hago para clerear el historial
+        move(command_y,command_x); 
+        clrtoeol();
+
         mvprintw(command_y,command_x,"%s",bufferCommandLine.c_str());
-        move(command_y,command_x);
         refresh();
 
-        while((letra = getch()) != 27)
+        while(true)
         {
-            char cLetra = (char)letra;
-            if(letra == KEY_ENTER)
+            letra = getch();
+            cLetra = (char)letra;
+            if(letra == '\n')
             {
                 handleCommandsTypes();
+                break;
+            }
+            if (letra == 27)
+            {
+                clrtoeol();
+                move(y_actual,x_actual);
+                mode = Mode::NormalMode;
+                refresh();
                 break;
             }
             else
             {
                 bufferCommandLine.push_back(cLetra);
-                command_x+=1;
+                clrtoeol(); 
                 mvprintw(command_y,command_x,"%s",bufferCommandLine.c_str());
-                move(command_y,command_x+1);
                 refresh();
             }
         }
-        clrtoeol(); 
-        move(y_actual,x_actual);
-        mode = Mode::NormalMode;
-        refresh();
+        return;
     }
 
     void inputsFunction()
@@ -201,6 +230,10 @@ public:
             {
                 mode=Mode::CommandMode;
                 inputsFunction();
+                if (salir == true)
+                {
+                    break;
+                }
             }
             else
             {
