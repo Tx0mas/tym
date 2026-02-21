@@ -109,7 +109,8 @@ public:
         init_pair(1,COLOR_RED,COLOR_WHITE);
         int filaEstado = y_max-2;
         std::string modeString = getModeString();
-        std::string estado = "||"+modeString+"||      Locacion->"+fileName+"      ||      Historial->"+bufferCommandLine;
+        std::string estado = "||"+modeString+"||      Locacion->"
+            +fileName+"      ||      Historial->"+bufferCommandLine;
         attron(COLOR_PAIR(1));
         mvhline(filaEstado,x_min,' ', x_max);
         mvprintw(filaEstado,x_min,"%s",estado.c_str());
@@ -286,13 +287,13 @@ public:
         }
         else if (letra == 'b')  //TODO que x_actual == 0 me mande al de arriba
         {
-            size_t indiceEspacio = buffer[y_actual].find_last_of(' ',x_actual-2);
-            if (indiceEspacio != std::string::npos && x_actual!=0)
+            size_t indiceEspacio = buffer[y_actual].find_last_not_of(' ',x_actual-1); 
+            if (indiceEspacio != std::string::npos && x_actual>0)
             {
-                size_t indice = buffer[y_actual].find_last_not_of(' ',indiceEspacio+1);
+                size_t indice = buffer[y_actual].find_last_of(' ',indiceEspacio-1);
                 if(indice != std::string::npos)
                 {
-                    x_actual = indice;
+                    x_actual = indice+1;
                 }
                 else
                 {
