@@ -46,6 +46,9 @@ private:
     std::unordered_set<int> setYNavigation{
         'j','k' 
     };
+    std::unordered_set<int> setInsertKeys{
+        'i','a','A'
+    };
 
 public:
     Editor(std::string nombreFile)
@@ -467,13 +470,20 @@ public:
                 handleResize();
                 continue;
             }
-            else if (letra == 'i' && mode == Mode::NormalMode)
+            else if (mode== Mode::NormalMode 
+                    && setInsertKeys.find(letra)!=setInsertKeys.end())
             {
-                mode=Mode::InsertMode;
-            }
-            else if (letra == 'a' && mode == Mode::NormalMode)
-            {
-                x_actual+=1;
+                if (letra == 'i')
+                {
+                }
+                else if (letra == 'a')
+                {
+                    x_actual+=1;
+                }
+                else if (letra == 'A')
+                {
+                    x_actual=buffer[y_actual].size(); 
+                }
                 mode=Mode::InsertMode;
             }
             else if (letra == 27 && mode == Mode::InsertMode)
