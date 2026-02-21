@@ -26,6 +26,7 @@ private:
     std::fstream file;
     std::string fileName;
     std::ofstream outFile;
+    int saveLetra{};
     int letra{};
     char cLetra = (char)letra;
 
@@ -41,7 +42,7 @@ private:
     bool salir{false};
 
     std::unordered_set<int> setXNavigation{
-        'h','l','w','b','0'
+        'h','l','w','b','0','f',';',','
     };
     std::unordered_set<int> setYNavigation{
         'j','k' 
@@ -307,6 +308,35 @@ public:
         {
             x_actual=0;
         }
+        else if (letra == 'f')
+        {
+            saveLetra = getch();
+            if (saveLetra == 27)
+            {
+                return;
+            }
+            if (buffer[y_actual].find(saveLetra,x_actual+1)!=std::string::npos)
+            {
+                size_t indice = buffer[y_actual].find(saveLetra,x_actual+1);
+                x_actual = indice;
+            }
+        }
+        else if (letra == ';') //bug me manda al final en el ultimo
+        {
+            if (buffer[y_actual].find(saveLetra,x_actual+1)!=std::string::npos)
+            {
+                size_t indice = buffer[y_actual].find(saveLetra,x_actual+1);
+                x_actual = indice;
+            }
+        }
+        else if (letra == ',')
+        {
+            if (buffer[y_actual].find_last_of(saveLetra,x_actual-1)!=std::string::npos)
+            {
+                size_t indice = buffer[y_actual].find_last_of(saveLetra,x_actual-1);
+                x_actual = indice;
+            }
+        }
         x_dinamicMax = x_actual;
     }
 
@@ -471,7 +501,7 @@ public:
                 continue;
             }
             else if (mode== Mode::NormalMode 
-                    && setInsertKeys.find(letra)!=setInsertKeys.end())
+                && setInsertKeys.find(letra)!=setInsertKeys.end())
             {
                 if (letra == 'i')
                 {
