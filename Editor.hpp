@@ -3,6 +3,7 @@
 #include<ncurses.h>
 #include<iostream>
 #include<fstream>
+#include<unordered_set>
 
 #define SET_SCROLL 2
 #define JK_TO_ESCAPE 1
@@ -38,6 +39,14 @@ private:
     int x_dinamicMax{};
     bool rareKey{false};
     bool salir{false};
+
+    std::unordered_set<int> setXNavigation{
+        'h','l','w','b','0'
+    };
+    std::unordered_set<int> setYNavigation{
+        'j','k' 
+    };
+
 public:
     Editor(std::string nombreFile)
     :fileName{nombreFile}
@@ -126,7 +135,7 @@ public:
         getmaxyx(stdscr, y_max, x_max);
         noecho();             
         keypad(stdscr, TRUE);
-        cbreak();             
+        cbreak();
         scrollok(stdscr, FALSE); 
         idlok(stdscr, FALSE);   
         renderScreen();
@@ -251,16 +260,60 @@ public:
         {
             x_actual-=1;
         }
+        else if (letra == 'w') 
+        {
+            size_t indiceEspacio = buffer[y_actual].find_first_of(' ',x_actual+1);
+            if (indiceEspacio != std::string::npos) 
+            {
+                size_t indice = buffer[y_actual].find_first_not_of(' ',indiceEspacio+1);
+                if(indice != std::string::npos)
+                {
+                    x_actual = indice;
+                }
+                else //TODO que x_actual == buffer[y_actual].size() me mande al de abajo al start
+                {
+                    x_actual = buffer[y_actual].size();
+                }
+            }
+            else
+            {
+                x_actual = buffer[y_actual].size();
+            }
+        }
+        else if (letra == 'b')  //TODO que x_actual == 0 me mande al de arriba
+        {
+            size_t indiceEspacio = buffer[y_actual].find_last_of(' ',x_actual-2);
+            if (indiceEspacio != std::string::npos && x_actual!=0)
+            {
+                size_t indice = buffer[y_actual].find_last_not_of(' ',indiceEspacio+1);
+                if(indice != std::string::npos)
+                {
+                    x_actual = indice;
+                }
+                else
+                {
+                    x_actual = 0;
+                }
+            }
+            else
+            {
+                x_actual = 0;
+            }
+        }
+        else if (letra == '0')  //TODO que x_actual == 0 me mande al de arriba
+        {
+            x_actual=0;
+        }
         x_dinamicMax = x_actual;
     }
 
     void handleNavegation()
     {
-        if (letra == 'j' || letra == 'k')
+        if (setYNavigation.find(letra)!=setYNavigation.end())
         {
             handleYScroll();
         }
-        else if (letra == 'l' || letra == 'h')
+        if (setXNavigation.find(letra)!=setXNavigation.end())
         {
             handleXScroll();
         }
@@ -280,7 +333,8 @@ public:
 
     void handleNormalMode()
     {
-        if (letra =='j' || letra == 'k' || letra == 'l' || letra =='h')
+        if (setXNavigation.find(letra)!=setXNavigation.end()
+            || setYNavigation.find(letra)!=setYNavigation.end())
         {
             handleNavegation();
         }
@@ -417,6 +471,11 @@ public:
             {
                 mode=Mode::InsertMode;
             }
+            else if (letra == 'a' && mode == Mode::NormalMode)
+            {
+                x_actual+=1;
+                mode=Mode::InsertMode;
+            }
             else if (letra == 27 && mode == Mode::InsertMode)
             {
                 mode=Mode::NormalMode;
@@ -424,18 +483,18 @@ public:
             else if (letra == ':' && mode == Mode::NormalMode)
             {
                 mode=Mode::CommandMode;
+                renderScreen();
                 inputsFunction();
                 if (salir == true)
                 {
                     break;
                 }
-                renderScreen();
             }
             else
             {
                 inputsFunction();
-                renderScreen();
             }
+            renderScreen();
         }
         endwin();
     }
