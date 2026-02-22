@@ -4,6 +4,9 @@
 #include<iostream>
 #include<fstream>
 #include<unordered_set>
+#include<filesystem>
+
+namespace fs = std::filesystem;
 
 #define SET_SCROLL 2
 #define JK_TO_ESCAPE 1
@@ -40,6 +43,12 @@ private:
     int x_dinamicMax{};
     bool rareKey{false};
     bool salir{false};
+    bool inExplorer{false};
+    bool alreadyRenderFirst{false};
+
+    const char* actualStringPath = std::getenv("HOME"); 
+    fs::path actualFilePath = actualStringPath;
+    //fs::current_path()) //capaz puedo poner solo current_path
 
     std::unordered_set<int> setXNavigation{
         'h','l','w','b','0','f',';',','
@@ -55,20 +64,29 @@ public:
     Editor(std::string nombreFile)
     :fileName{nombreFile}
     {
-        file.open(nombreFile,std::ios::in | std::ios::out | std::ios::binary);;
-        if (!file.is_open())
+    }
+
+    void fillBufferWithFile()
+    {
+        buffer.clear();
+        file.open(fileName,std::ios::in | std::ios::out | std::ios::binary);
+        if (!file)
         {
-            std::cerr<<"Error de file";
-            return;
+            buffer.push_back("File mal cargada");
         }
-        while (std::getline(file,linea))
+        else
         {
-            buffer.push_back(linea);
+            while (std::getline(file,linea))
+            {
+                buffer.push_back(linea);
+            }
+            if (buffer.empty())
+            {
+                buffer.push_back("");
+            }
         }
-        if (buffer.empty())
-        {
-            buffer.push_back("");
-        }
+        x_actual = 0;
+        y_actual = 0;
     }
 
     std::string getModeString()
@@ -367,7 +385,28 @@ public:
 
     void handleNormalMode()
     {
-        if (setXNavigation.find(letra)!=setXNavigation.end()
+        if (letra == '\n' && inExplorer == true)
+        {
+            if (buffer[y_actual].back()=='/')
+            {
+                actualFilePath/=buffer[y_actual].substr(0,buffer[y_actual].length()-1);
+                actualStringPath = actualFilePath.c_str();
+                renderFileManager();
+            }
+            else
+            {
+                fs::path tempFilePath = actualFilePath/buffer[y_actual];
+                fileName = tempFilePath.string();
+                inExplorer = false;
+
+                if (file.is_open()) file.close();
+                file.clear();
+
+                fillBufferWithFile();
+                renderScreen();
+            }
+        }
+        else if (setXNavigation.find(letra)!=setXNavigation.end()
             || setYNavigation.find(letra)!=setYNavigation.end())
         {
             handleNavegation();
@@ -399,6 +438,12 @@ public:
             file.close();
             endwin();
             salir = true;
+        }
+        else if( bufferCommandLine == ":Ex")
+        {
+            renderFileManager();
+            mode=Mode::NormalMode;
+            inExplorer = true;
         }
         else
         {
@@ -492,7 +537,12 @@ public:
 
     void general()
     {
-        renderFirstScreen();
+        fillBufferWithFile();
+        if (alreadyRenderFirst == false)
+        {
+            renderFirstScreen();
+        }
+        alreadyRenderFirst = true;
         while (true)
         {
             letra = getch();
@@ -502,7 +552,8 @@ public:
                 continue;
             }
             else if (mode== Mode::NormalMode 
-                && setInsertKeys.find(letra)!=setInsertKeys.end())
+                && setInsertKeys.find(letra)!=setInsertKeys.end() 
+                && inExplorer == false)
             {
                 if (letra == 'i')
                 {
@@ -540,6 +591,36 @@ public:
         endwin();
     }
 
+
+    //FILEMANAGERCRAP
+    void renderFileManager()
+    {
+        bufferFilesInCurrentDir();
+        y_actual = 0;
+        x_actual = 0;
+        getmaxyx(stdscr, y_max, x_max);
+        move(x_actual,y_actual);
+        renderScreen();
+    }
+
+    void bufferFilesInCurrentDir()
+    {
+        buffer.clear();
+        y_actual=0;
+        x_actual=0;
+        for (auto &file : fs::directory_iterator(actualStringPath))
+        {
+            std::string sFile = file.path().filename().string();
+            if (sFile[0]=='.') continue;
+            else if (file.is_directory())
+            {
+                sFile.push_back('/');
+            }
+            buffer.push_back(sFile);
+            y_actual+=1;
+        }
+    }
+    //FILEMANAGERCRAP
 
 
 
