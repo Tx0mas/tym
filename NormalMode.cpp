@@ -48,15 +48,9 @@ void Editor::handleNormalMode()
         }
         else if (letra == '-')
         {
-            std::string tempSFilePath{actualFilePath};
-            if (tempSFilePath.find_last_of('/')!=std::string::npos 
-                    && tempSFilePath.find('/')!=tempSFilePath.find_last_of('/'))
-            {
-                fs::path temp{tempSFilePath.substr(0,tempSFilePath.find_last_of('/'))};
-                actualFilePath = temp;
-                actualStringPath = actualFilePath.c_str();
-                renderFileManager();
-            }
+            actualFilePath = actualFilePath.parent_path();
+            actualStringPath = actualFilePath.c_str();
+            renderFileManager();
         }
     }
     else if (setXNavigation.find(letra)!=setXNavigation.end()
