@@ -25,25 +25,38 @@ void Editor::handleNavegation()
 
 void Editor::handleNormalMode()
 {
-    if (letra == '\n' && inExplorer == true)
+    if ((letra == '\n' || letra =='-') && inExplorer == true)
     {
-        if (buffer[y_actual].back()=='/')
+        if (letra == '\n')
         {
-            actualFilePath/=buffer[y_actual].substr(0,buffer[y_actual].length()-1);
-            actualStringPath = actualFilePath.c_str();
-            renderFileManager();
+            if (buffer[y_actual].back()=='/')
+            {
+                actualFilePath/=buffer[y_actual].substr(0,buffer[y_actual].length()-1);
+                actualStringPath = actualFilePath.c_str();
+                renderFileManager();
+            }
+            else
+            {
+                fs::path tempFilePath = actualFilePath/buffer[y_actual];
+                fileName = tempFilePath.string();
+                inExplorer = false;
+                if (file.is_open()) file.close();
+                file.clear();
+                fillBufferWithFile();
+                renderScreen();
+            }
         }
-        else
+        else if (letra == '-')
         {
-            fs::path tempFilePath = actualFilePath/buffer[y_actual];
-            fileName = tempFilePath.string();
-            inExplorer = false;
-
-            if (file.is_open()) file.close();
-            file.clear();
-
-            fillBufferWithFile();
-            renderScreen();
+            std::string tempSFilePath{actualFilePath};
+            if (tempSFilePath.find_last_of('/')!=std::string::npos 
+                    && tempSFilePath.find('/')!=tempSFilePath.find_last_of('/'))
+            {
+                fs::path temp{tempSFilePath.substr(0,tempSFilePath.find_last_of('/'))};
+                actualFilePath = temp;
+                actualStringPath = actualFilePath.c_str();
+                renderFileManager();
+            }
         }
     }
     else if (setXNavigation.find(letra)!=setXNavigation.end()

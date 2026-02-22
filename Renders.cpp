@@ -38,8 +38,19 @@ void Editor::renderBar()
     init_pair(1,COLOR_RED,COLOR_WHITE);
     int filaEstado = y_max-2;
     std::string modeString = getModeString();
-    std::string estado = "||"+modeString+"||      Locacion->"
-        +fileName+"      ||      Historial->"+bufferCommandLine;
+
+    std::string tempFileName{};
+    if (fileName.find_last_of('/')!=std::string::npos)
+    {
+        tempFileName = fileName.substr(fileName.find_last_of('/'),fileName.length()-1);
+    }
+    else
+    {
+        tempFileName = fileName;
+    }
+
+    std::string estado = "|"+modeString+"| "
+        +tempFileName+" | H: "+bufferCommandLine;
     attron(COLOR_PAIR(1));
     mvhline(filaEstado,x_min,' ', x_max);
     mvprintw(filaEstado,x_min,"%s",estado.c_str());
