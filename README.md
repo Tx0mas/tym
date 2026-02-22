@@ -1,6 +1,7 @@
 # tym
 
-Como vim ya es mainstream, mejor usar tym.
+Como vim ya es mainstream, mejor usar tym. Tambien tiene un file manager similar a netrw el cual
+al igual que vim con ":Ex" se puede entrar.
 
 ## Build
 
