@@ -15,7 +15,7 @@ void Editor::bufferFilesInCurrentDir()
     buffer.clear();
     y_actual=0;
     x_actual=0;
-    for (auto &file : fs::directory_iterator(actualStringPath))
+    for (auto &file : fs::directory_iterator(actualFilePath))
     {
         std::string sFile = file.path().filename().string();
         if (sFile[0]=='.') continue;

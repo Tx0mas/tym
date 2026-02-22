@@ -46,9 +46,8 @@ private:
     bool inExplorer{false};
     bool alreadyRenderFirst{false};
 
-    const char* actualStringPath = std::getenv("HOME"); 
-    fs::path actualFilePath = actualStringPath;
-    //fs::current_path()) //capaz puedo poner solo current_path
+    fs::path actualFilePath {};
+    const char* actualStringPath{actualFilePath.c_str()};
 
     std::unordered_set<int> setXNavigation{
         'h','l','w','b','0','f',';',','
