@@ -93,6 +93,17 @@ void Editor::handleCommandsTypes()
         mode=Mode::NormalMode;
         inExplorer = true;
     }
+    else if( bufferCommandLine == ":w")
+    {
+        std::ofstream outFile (fileName, std::ios::trunc);
+        for (auto &lineas : buffer)
+        {
+            outFile<<lineas<<'\n';
+        }
+        mode=Mode::NormalMode;
+        move(y_actual,x_actual);
+        refresh();
+    }
     else
     {
         move(y_max-1,x_min);
