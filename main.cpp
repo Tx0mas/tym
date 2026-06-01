@@ -7,8 +7,8 @@ int main(int argc,char **argv)
         std::cerr<<"Ingrese la file a editar.";
         return 1;
     }
+
     Editor editThis{argv[1]};
     editThis.general();
-
     return 0;
 }
